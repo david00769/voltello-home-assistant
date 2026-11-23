@@ -1,6 +1,5 @@
 {
   "name": "Voltello (VE-X, unofficial)",
   "homeassistant": "2026.10.0",
-  "render_readme": true,
-  "domains": ["voltello_vex"]
+  "render_readme": true
 }
