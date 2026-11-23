@@ -10,6 +10,29 @@ Energy.
 
 [![Open your Home Assistant instance and open this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=david00769&repository=voltello-home-assistant&category=integration)
 
+## Why you might want it
+
+Voltello runs your battery and solar export through "plans", for example charging from
+the grid when the wholesale price is low, or limiting export when exporting would cost
+you money. The Voltello app shows what it decided, but Home Assistant can't see it, so
+your automations can't respond to it.
+
+With this integration, Home Assistant knows, every five minutes in daylight:
+
+- **when your solar is being held back** (an export limit is in force). That is spare
+  energy you could use instead: pre-cool or pre-heat the house, heat water, charge a car.
+  For example, an automation can start the air conditioner when
+  `binary_sensor.voltello_curtailment_active` turns on.
+- **what the battery has been told to do** (self-consume, idle, charge, discharge, and at
+  what power), so a dashboard can show it and a charging plan can be checked against it;
+- **a record over time**, so you can see how often your solar was curtailed and how your
+  plans behaved.
+
+It was written for one household on Amber Electric with a BLUETTI battery,
+which uses it to soak up curtailed solar with air-conditioning and to work out when a grid
+top-up of the battery pays. It should work for any Voltello customer with VE-X API
+access; nothing in it is specific to that house.
+
 ## What it gives you
 
 One device per Voltello service point, with:
