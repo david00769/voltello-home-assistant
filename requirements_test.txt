@@ -1,0 +1,2 @@
+# Pinned so the test environment matches one Home Assistant release (2026.10.4).
+pytest-homeassistant-custom-component==0.13.375

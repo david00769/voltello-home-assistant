@@ -1,0 +1,97 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Voltello (VE-X)",
+        "description": "Read-only access to the control state your Voltello plans apply (export limits, battery mode). Create an API key in the Voltello app: Menu, Manage Access, API Access. Village Energy support can tell you your customer id; the app does not show it.",
+        "data": {
+          "api_key": "API key",
+          "customer_id": "Customer id",
+          "base_url": "API base URL"
+        },
+        "data_description": {
+          "base_url": "Leave as is unless Village gave you another address."
+        }
+      },
+      "service_point": {
+        "title": "Choose a site",
+        "data": {
+          "service_point_id": "Service point"
+        }
+      },
+      "reauth_confirm": {
+        "title": "New Voltello API key",
+        "description": "VE-X refused the stored key. Enter a new one from the Voltello app.",
+        "data": {
+          "api_key": "API key"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "VE-X refused the key or customer id (401/403). Check both; Village may need to enable API read access on your account.",
+      "cannot_connect": "Could not reach VE-X. Check the base URL and your connection.",
+      "no_service_points": "This customer has no service points.",
+      "wrong_account": "This key belongs to an account without this site."
+    },
+    "abort": {
+      "already_configured": "This Voltello site is already set up.",
+      "invalid_auth": "VE-X refused the key or customer id.",
+      "cannot_connect": "Could not reach VE-X.",
+      "no_inverter": "No controllable inverter was found at this site.",
+      "reauth_successful": "The new key works.",
+      "no_control_log": "VE-X answered without a control log for this site. Village may need to enable API read access."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Polling",
+        "description": "Optional. With a feed-in price sensor, polling slows to every 15 minutes while feed-in is above 2 c (nothing to curtail). With a PV power sensor, polling also runs when the sun entity is unavailable. The solar plan contract (e.g. Solar for Amber) makes Curtailment active count only its export limits; the list shows contracts seen in the control log. Leave empty to count any export limit.",
+        "data": {
+          "feed_in_price_entity": "Feed-in price sensor ($/kWh)",
+          "pv_power_entity": "PV power sensor (W)",
+          "curtailment_contract_id": "Solar plan contract (for curtailment)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "export_control_active": {
+        "name": "Export control active"
+      },
+      "curtailment_active": {
+        "name": "Curtailment active"
+      },
+      "vex_stale": {
+        "name": "VEX stale"
+      }
+    },
+    "sensor": {
+      "allowed_export": {
+        "name": "Allowed export"
+      },
+      "inverter_current_power": {
+        "name": "Inverter current power"
+      },
+      "inverter_power_setpoint": {
+        "name": "Inverter power setpoint"
+      },
+      "battery_mode": {
+        "name": "Battery mode"
+      },
+      "battery_power_setpoint": {
+        "name": "Battery power setpoint"
+      },
+      "battery_soc_discharge_threshold": {
+        "name": "Battery SOC discharge threshold"
+      },
+      "vex_detail": {
+        "name": "VEX detail"
+      },
+      "vex_failures": {
+        "name": "VEX failures"
+      }
+    }
+  }
+}

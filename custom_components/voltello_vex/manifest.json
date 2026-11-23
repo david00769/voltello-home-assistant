@@ -1,0 +1,15 @@
+{
+  "domain": "voltello_vex",
+  "name": "Voltello (VE-X, unofficial)",
+  "codeowners": [
+    "@david00769"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/david00769/voltello-home-assistant",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/david00769/voltello-home-assistant/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}
