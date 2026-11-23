@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.1 (2026-11-23)
+
+- A refused key (401/403) asks for a new one only after 3 refusals in a row; until then it
+  is an ordinary failed call (backoff, last reading kept, one warning). VE-X has refused
+  good keys before, and one bad answer should not stop the integration.
+- The base URL must be https (the API key is sent with every request); plain http is
+  accepted only for a test server on this machine.
+- Failure reasons are logged once (warning) and the recovery once (info).
+
 ## 0.1.0 (2026-11-23)
 
 First release.

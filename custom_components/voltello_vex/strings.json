@@ -31,7 +31,8 @@
       "invalid_auth": "VE-X refused the key or customer id (401/403). Check both; Village may need to enable API read access on your account.",
       "cannot_connect": "Could not reach VE-X. Check the base URL and your connection.",
       "no_service_points": "This customer has no service points.",
-      "wrong_account": "This key belongs to an account without this site."
+      "wrong_account": "This key belongs to an account without this site.",
+      "invalid_url": "Use an https:// address (the API key is sent with every request)."
     },
     "abort": {
       "already_configured": "This Voltello site is already set up.",

@@ -83,11 +83,41 @@ async def test_entities_go_unavailable_when_the_read_is_stale(hass: HomeAssistan
         assert hass.states.get("sensor.voltello_vex_failures").state == "1"
 
 
-async def test_a_refused_key_starts_reauth(hass: HomeAssistant, aioclient_mock) -> None:
+def _reauth_started(hass: HomeAssistant) -> bool:
+    return any(f["context"]["source"] == "reauth" for f in hass.config_entries.flow.async_progress())
+
+
+async def test_three_refusals_in_a_row_start_reauth(hass: HomeAssistant, aioclient_mock) -> None:
     aioclient_mock.get(URL_DETAIL, status=401)
-    entry = await _setup(hass, 1000.0, ok=False)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
-    assert any(f["context"]["source"] == "reauth" for f in hass.config_entries.flow.async_progress())
+    entry = await _setup(hass, 1000.0)                       # refusal 1: set up, no data
+    assert entry.state is ConfigEntryState.LOADED and not _reauth_started(hass)
+    coordinator = entry.runtime_data
+    with patch(CLOCK, return_value=1300.0):                  # refusal 2
+        await coordinator.async_refresh()
+    assert not _reauth_started(hass) and coordinator.refusals == 2
+    with patch(CLOCK, return_value=1600.0):                  # refusal 3
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+    assert _reauth_started(hass)
+
+
+async def test_a_good_answer_between_refusals_starts_over(hass: HomeAssistant, aioclient_mock) -> None:
+    aioclient_mock.get(URL_DETAIL, status=403)
+    entry = await _setup(hass, 1000.0)
+    coordinator = entry.runtime_data
+    with patch(CLOCK, return_value=1300.0):
+        await coordinator.async_refresh()
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(URL_DETAIL, json=DETAIL_ACTIVE)
+    with patch(CLOCK, return_value=1600.0):
+        await coordinator.async_refresh()
+    assert coordinator.refusals == 0 and coordinator.poll.failures == 0
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(URL_DETAIL, status=403)
+    for now in (1900.0, 2200.0):
+        with patch(CLOCK, return_value=now):
+            await coordinator.async_refresh()
+    assert not _reauth_started(hass) and coordinator.refusals == 2
 
 
 async def test_diagnostics_redact_ids_key_and_address(hass: HomeAssistant, aioclient_mock) -> None:

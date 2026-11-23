@@ -25,6 +25,9 @@ QUIET_S = 900              # feed-in clearly positive: nothing to curtail
 QUIET_FEED_IN_ABOVE = 0.02  # $/kWh (Amber's unit)
 DAYLIGHT_PV_W = 50
 FAILURES_BEFORE_PAUSE = 3
+# VE-X has refused good keys before (a header bug, fixed by Village): ask for a new key only
+# after this many refusals in a row.
+REFUSALS_BEFORE_REAUTH = 3
 PAUSE_S = 3600             # after FAILURES_BEFORE_PAUSE failures in a row
 STALE_S = 1200             # entities unavailable when the last good read is older
 TICK_S = 60                # the coordinator wakes each minute; calls only when due

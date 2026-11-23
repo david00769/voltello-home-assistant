@@ -76,7 +76,8 @@ Entities go unavailable 20 minutes after the last good read (overnight, during b
   you add it, so a new install shows its state at once).
 - 15 minutes while feed-in is above 2 c.
 - After 3 failures in a row, one call an hour until one succeeds.
-- A refused key (401/403) asks for a new one (re-authentication).
+- A refused key (401/403) asks for a new one (re-authentication) after 3 refusals in a row:
+  about 10 minutes of daylight polling, or the next morning if it happens at night.
 - An answer without a control log is a failed call; the last good state is kept.
 - The last call time is stored, so a restart, reload or options change adds no call.
 - At most 12 calls an hour.

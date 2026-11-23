@@ -90,3 +90,22 @@ async def test_reauth_refuses_a_key_for_another_account(hass: HomeAssistant, aio
     result = await entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {"api_key": "KEY9"})
     assert result["errors"] == {"base": "wrong_account"} and entry.data["api_key"] == "KEY1"
+
+
+async def test_the_base_url_must_be_https(hass: HomeAssistant, aioclient_mock) -> None:
+    for url in ("http://example.com/xv1", "ftp://example.com", "not a url", "http://[::1", "https://"):
+        result = await hass.config_entries.flow.async_configure((await _start(hass))["flow_id"], {**USER_INPUT, "base_url": url})
+        assert result["errors"] == {"base_url": "invalid_url"}, url
+    assert aioclient_mock.call_count == 0                     # the key was never sent
+    aioclient_mock.get(URL_SERVICE_POINTS.replace(USER_INPUT["base_url"], "http://127.0.0.1:8199/xv1"), json={"data": {"servicePoints": []}})
+    result = await hass.config_entries.flow.async_configure((await _start(hass))["flow_id"], {**USER_INPUT, "base_url": "http://127.0.0.1:8199/xv1"})
+    assert result["errors"] == {"base": "no_service_points"}  # a local test server is allowed
+
+
+async def test_the_base_url_is_stored_without_spaces(hass: HomeAssistant, aioclient_mock) -> None:
+    aioclient_mock.get(URL_SERVICE_POINTS, json=SERVICE_POINTS)
+    aioclient_mock.get(URL_DER, json=DER)
+    aioclient_mock.get(URL_DETAIL, json=DETAIL_ACTIVE)
+    result = await hass.config_entries.flow.async_configure(
+        (await _start(hass))["flow_id"], {**USER_INPUT, "base_url": "  " + USER_INPUT["base_url"] + " "})
+    assert result["type"] is FlowResultType.CREATE_ENTRY and result["data"]["base_url"] == USER_INPUT["base_url"]

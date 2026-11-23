@@ -17,7 +17,7 @@ from . import policy
 from .api import VexAuthError, VexClient, VexError
 from .const import (
     CONF_BATTERY_ID, CONF_FEED_IN_ENTITY, CONF_INVERTER_ID, CONF_PV_ENTITY, CONF_SERVICE_POINT_ID,
-    DOMAIN, STALE_S, STORAGE_VERSION, TICK_S,
+    DOMAIN, REFUSALS_BEFORE_REAUTH, STALE_S, STORAGE_VERSION, TICK_S,
 )
 from .control_log import ControlState, has_control_log, summarize
 
@@ -49,6 +49,7 @@ class VexCoordinator(DataUpdateCoordinator[ControlState | None]):
         self.poll = policy.PollState()
         self.last_detail: dict[str, Any] | None = None
         self.seen_contracts: list[str] = []
+        self.refusals = 0   # 401/403 answers in a row
         # The last call survives restarts and reloads, so they never add a call (the ceiling).
         self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}")
 
@@ -97,10 +98,17 @@ class VexCoordinator(DataUpdateCoordinator[ControlState | None]):
         except VexAuthError as err:
             self.poll = policy.after_call(self.poll, now, ok=False)
             self._remember()
-            raise ConfigEntryAuthFailed(str(err)) from err
+            self.refusals += 1
+            if self.refusals >= REFUSALS_BEFORE_REAUTH:
+                raise ConfigEntryAuthFailed(str(err)) from err
+            if self.refusals == 1:
+                _LOGGER.warning("VE-X refused the key (%s); asking for a new one after %s refusals in a row",
+                                err, REFUSALS_BEFORE_REAUTH)
+            return self.data
         except VexError as err:
             self.poll = policy.after_call(self.poll, now, ok=False)
             self._remember()
+            self.refusals = 0
             # Logged once as it goes, so the reason survives in the log (HA's pattern for an
             # unavailable service); later failures in the same run only at debug.
             if self.poll.failures == 1:
@@ -115,6 +123,7 @@ class VexCoordinator(DataUpdateCoordinator[ControlState | None]):
         if self.poll.failures:
             _LOGGER.info("VE-X answering again after %s failed calls", self.poll.failures)
         self.poll = policy.after_call(self.poll, now, ok=True)
+        self.refusals = 0
         self.last_detail = detail
         if state.inverter_contract_id and state.inverter_contract_id not in self.seen_contracts:
             self.seen_contracts.append(state.inverter_contract_id)

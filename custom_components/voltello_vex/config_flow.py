@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any
+from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -28,6 +29,18 @@ USER_SCHEMA = vol.Schema({
 })
 
 
+def base_url_ok(url: str) -> bool:
+    """https only: the API key travels in a header. Plain http only to this machine (testing)."""
+    try:
+        parts = urlparse(url)
+        host = parts.hostname
+    except ValueError:          # e.g. an unclosed IPv6 bracket
+        return False
+    if parts.scheme == "https":
+        return bool(host)
+    return parts.scheme == "http" and host in ("localhost", "127.0.0.1", "::1")
+
+
 class VoltelloVexConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
@@ -41,6 +54,10 @@ class VoltelloVexConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
+            user_input = {**user_input, CONF_BASE_URL: user_input[CONF_BASE_URL].strip()}
+        if user_input is not None and not base_url_ok(user_input[CONF_BASE_URL]):
+            errors[CONF_BASE_URL] = "invalid_url"
+        elif user_input is not None:
             try:
                 self._points = service_point_ids(await self._client(user_input).service_points())
             except VexAuthError:
